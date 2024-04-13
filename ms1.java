@@ -1,5 +1,3 @@
-package tram;
-
 public class TramLinkSimulation extends Process {
     int numberofstops;
     int numberoftrams;
@@ -7,13 +5,13 @@ public class TramLinkSimulation extends Process {
     int maxqueue = 0;
     int number_of_max_stop_length = 0;
     boolean smer_of_max_length_stop = true;
-    double simPeriod = 200;
-    Stop[] stopsfirstrline = new Stop[numberofstops];
-    Stop[] stopssecondline = new Stop[numberofstops];
+    public double simPeriod = 10;
+    Stop[] stopsfirstrline;
+    Stop[] stopssecondline;
     Head depointo = new Head();
     Head depoout = new Head();
-    Head[] forbusstups = new Head[numberofstops];
-    Head[] forbusstupsback = new Head[numberofstops];
+    Head[] forbusstups;
+    Head[] forbusstupsback;
     double time;
     Random random = new Random(5);
 
@@ -23,7 +21,8 @@ public class TramLinkSimulation extends Process {
         boolean depofrom = true;
         @Override
         protected void actions() {
-            while(true) {
+            while(time()<= simPeriod) {
+//                System.out.println(time() + ' ' + simPeriod);
                 if (numberofcurrentstop > numberofstops && depofrom) {
                     hold(random.normal(15.0, 3.0));
                     into(depoout);
@@ -52,18 +51,37 @@ public class TramLinkSimulation extends Process {
         }
     }
     class Depo extends Process{
-        Head depo;
-        public Depo(Head seznam){
-            depo = seznam;
+        Boolean depo;
+        public Depo(Boolean smer){
+
+            depo = smer;
+            //System.out.println("Depo konstruktor " + depo.cardinal());
+            //System.out.println("Depointo konstruktor" + depointo.cardinal());
         }
         @Override
         protected void actions() {
             while (time() <= simPeriod){
-                if (!depo.empty()){
-                    hold(5.0);
-                    Tram jizda = (Tram) depo.first();
-                    jizda.out();
-                    activate(jizda);
+                //System.out.println(depo.cardinal() + "");
+                System.out.println(time() + "+" + simPeriod);
+                //System.out.println(!depointo.empty() + " ");
+                System.out.println(depo);
+                if (depo){
+                    if (!depointo.empty()) {
+                        System.out.println("Im there");
+                        hold(0.5);
+                        Tram jizda = (Tram) depointo.first();
+                        jizda.out();
+                        activate(jizda);
+                    }
+                }else {
+                    //System.out.println("Im there");
+                    if(!depoout.empty()){
+                        System.out.println("Im there");
+                        hold(0.5);
+                        Tram jizda = (Tram) depoout.first();
+                        jizda.out();
+                        activate(jizda);
+                    }
                 }
             }
 
@@ -110,22 +128,27 @@ public class TramLinkSimulation extends Process {
     public TramLinkSimulation(int n, int k){
         numberofstops = n;
         numberoftrams = k;
+        stopsfirstrline = new Stop[numberofstops];
+        stopssecondline = new Stop[numberofstops];
+        forbusstups = new Head[numberofstops];
+        forbusstupsback = new Head[numberofstops];
     }
 
     @Override
     protected void actions() {
-        for(int i=1; i<numberoftrams;i++){
+        for(int i=0; i<numberoftrams;i++){
             new Tram().into(depointo);
         }
+        System.out.println(depointo.cardinal());
         for(int i = 0; i<numberofstops;i++){
             stopsfirstrline[i] = new Stop(i, true);
             stopssecondline[i] = new Stop(i, false);
         }
-        Depo depofirst = new Depo(depointo);
-        Depo deposecond = new Depo(depoout);
+        Depo depofirst = new Depo(true);
+        Depo deposecond = new Depo(false);
         activate(depofirst);
         activate(deposecond);
-        hold(simPeriod + 1000000);
+        hold(simPeriod + 100);
         report();
 
     }
